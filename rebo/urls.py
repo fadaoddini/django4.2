@@ -19,4 +19,17 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('bid/', include('bid.urls')),
+    path('info/', include('info.urls')),
+    path('transaction/', include('transaction.urls')),
+    path('company/', include('company.urls')),
+    path('learn/', include('learn.urls')),
+    path('transport/', include('transport.urls')),
+    path('hoghoogh/', include('hoghoogh.urls')),
+    path('order/', include('order.urls')),
+    path('', include('index.urls')),
+    path('login/', include('custom_login.urls')),
+    path('catalogue/', include('catalogue.urls')),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
