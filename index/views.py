@@ -45,40 +45,10 @@ class MainAdmin(View):
                       content_type=None, status=None, using=None)
 
 
-class MainIndex(View):
-    template_name = 'web/index.html'
-
-    def get(self, request, *args, **kwargs):
-        context = dict()
-
-        if request.user.is_anonymous:
-            products = Product.objects.filter(is_active=True).filter(
-                expire_time__gt=datetime.datetime.now()).order_by('price')
-            context['products'] = products
-            new_context = CustomPagination.create_paginator(products, 8, 3, context, request)
-            context['paginator'] = new_context['paginator']
-            context['page_obj'] = new_context['page_obj']
-            context['limit_number'] = new_context['limit_number']
-            context['num_pages'] = new_context['num_pages']
-
-        else:
-            products = Product.objects.filter(is_active=True).filter(
-                expire_time__gt=datetime.datetime.now()).order_by('price')
-            context['products'] = products
-            context['info'] = Info.objects.filter(user=request.user).first()
-            context['company'] = Company.objects.filter(user=request.user).first()
-            form_info = InfoUserForm()
-            context['form_info'] = form_info
-            form_company = CompanyForm()
-            context['form_company'] = form_company
-            new_context = CustomPagination.create_paginator(products, 8, 3, context, request)
-            context['paginator'] = new_context['paginator']
-            context['page_obj'] = new_context['page_obj']
-            context['limit_number'] = new_context['limit_number']
-            context['num_pages'] = new_context['num_pages']
-
-        return render(request, template_name=self.template_name, context=context,
-                      content_type=None, status=None, using=None)
+class MainIndex(APIView):
+    def get(self, request):
+        # پاسخ JSON با پیام سلام
+        return Response({"message": "سلام"})
 
 
 class MainIndexSearch(View):

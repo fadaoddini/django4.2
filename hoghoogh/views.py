@@ -1,7 +1,3 @@
-from collections import Counter
-
-import jdatetime
-import datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
@@ -17,7 +13,7 @@ from hoghoogh import forms
 from hoghoogh.forms import SettingHoghooghForm, ListPriceForm, ListAmarForm, HoghooghFormFirst
 from hoghoogh.models import SettingHoghoogh, ListPrice, Amar, Hoghoogh, Sarparasti, Tolid, AmarArchive, HoghooghArchive
 from hoghoogh.serializers import AmarSerializer
-from hoghoogh.utils import check_is_active, check_is_ok, check_is_location, check_is_staff, check_is_staff_by_staff_pk
+from hoghoogh.utils import check_is_active, check_is_location
 
 
 def hoghoogh_list(request):

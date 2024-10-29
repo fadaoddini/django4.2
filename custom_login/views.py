@@ -1,32 +1,33 @@
 import json
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication  # مطمئن شوید که این پکیج را نصب کرده‌اید
-from rest_framework.exceptions import AuthenticationFailed
-from django.contrib import messages
-import requests
+from datetime import datetime, timedelta
 
 import jwt
-from django.middleware.csrf import get_token
-from datetime import datetime, timedelta
-from django.shortcuts import get_object_or_404
+import requests
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.db import transaction as tran2
 from django.http import HttpResponseRedirect, JsonResponse
+from django.middleware.csrf import get_token
+from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from rest_framework import viewsets, status
+from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
+from rest_framework_simplejwt.authentication import JWTAuthentication  # مطمئن شوید که این پکیج را نصب کرده‌اید
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
 from custom_login import forms, helper
 from custom_login.models import MyUser, Follow, Address
 from custom_login.serializers import MyUserSerializer, AddressSerializer
 from rebo import settings
 from transaction.models import Transaction
 from transaction.views import add_balance_user
-from rest_framework.parsers import MultiPartParser, FormParser
 
 
 def verify_otp(request):
