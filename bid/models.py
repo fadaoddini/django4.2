@@ -1,7 +1,7 @@
 from django.db import models
 
 from catalogue.models import Product
-from custom_login.models import MyUser
+from login.models import MyUser
 
 
 class Bid(models.Model):

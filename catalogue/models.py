@@ -74,6 +74,19 @@ class Product(models.Model):
         (ACTIVE, 'true'),
         (INACTIVE, 'false'),
     )
+
+    PENDING = 1
+    APPROVED = 2
+    REJECTED = 3
+    EXPIRED = 4
+    STATUS_CHOICES = (
+        (PENDING, 'درحال انتظار'),
+        (APPROVED, 'تائید شده'),
+        (REJECTED, 'رد شده'),
+        (EXPIRED, 'منقضی شده'),
+    )
+
+
     User = user_model()
     user = models.ForeignKey(User, related_name='products', on_delete=models.RESTRICT)
     sell_buy = models.PositiveSmallIntegerField(default=SELL, choices=TYPES_SELL_OR_BUY)
@@ -87,6 +100,8 @@ class Product(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     modified_time = models.DateTimeField(auto_now=True)
     expire_time = models.DateTimeField(blank=True, null=True)
+    status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=PENDING)
+    rejection_reason = models.TextField(blank=True, null=True)
     is_successful = models.BooleanField(default=False)  # وضعیت موفقیت پرداخت
 
     class Meta:
@@ -152,6 +167,7 @@ class Product(models.Model):
                     ProductAttr(type=product_type_model, attr=attr, value=attr_val_model, product=new_product).save()
             result = "100"
         return result
+
 
 
 class ProductImage(models.Model):

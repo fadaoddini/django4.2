@@ -1,7 +1,7 @@
 from django import forms
 
 from info.models import Farmer, Storage, Broker, Service, Info
-from custom_login.models import MyUser
+from login.models import MyUser
 
 
 class InfoUserForm(forms.ModelForm):

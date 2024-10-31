@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model as user_model
 from info import forms
 from info.forms import ServiceForm, BrokerForm, StorageForm, FarmerForm
 from info.models import Info, Farmer
-from custom_login.models import MyUser
+from login.models import MyUser
 from transaction.models import Transaction
 from transaction.views import add_balance_user
 

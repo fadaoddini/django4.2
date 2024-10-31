@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication  # مطمئن شوید که این پکیج را نصب کرده‌اید
 
-from custom_login.models import MyUser
-from custom_login.views import CookieJWTAuthentication
+from login.models import MyUser
+from login.views import CookieJWTAuthentication
 from order.models import Payment, Gateway
 from order.utils import zpal_request_handler
 from rebo import settings

@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from custom_login.views import CookieJWTAuthentication
+from login.views import CookieJWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from order.utils import zpal_request_handler
 from order.models import Payment, Gateway

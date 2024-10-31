@@ -63,20 +63,13 @@ class ProductAttributeAdmin(admin.ModelAdmin):
     inlines = [ProductAttributeValueInline]
 
 
+
 @register(ProductType)
 class ProductTypeAdmin(admin.ModelAdmin):
     list_display = ('title', )
     search_fields = ('title',)
     inlines = [ProductAttributeInline]
 
-
-@register(ProductAttributeValue)
-class ProductAttributeValueAdmin(admin.ModelAdmin):
-    list_display = ('value', 'product_attribute')
-
-    def get_list_display(self, request):
-        print(request.user.info.is_active)
-        return self.list_display
 
 
 @register(Category)

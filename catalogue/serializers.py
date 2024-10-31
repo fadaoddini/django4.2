@@ -8,7 +8,7 @@ from django.db.models import Max, Min
 from learn.models import Learn
 import random
 
-from custom_login.serializers import MyUserSerializer
+from login.serializers import MyUserSerializer
 
 
 class ApiProductImageSerializer(serializers.ModelSerializer):

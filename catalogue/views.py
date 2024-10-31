@@ -7,7 +7,9 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Prefetch
 from bid.serializers import BidSerializer
-from custom_login.views import CookieJWTAuthentication
+from login.models import MyUser
+from login.serializers import MyProfileSerializer
+from login.views import CookieJWTAuthentication
 from order.models import Payment, Gateway
 from order.utils import zpal_request_handler
 from persiantools.jdatetime import JalaliDate
@@ -1723,48 +1725,70 @@ class AllProductAndRequestWeb(View):
                       content_type=None, status=None, using=None)
 
 
+class ProfileProfile(APIView):
+    def get(self, request, *args, **kwargs):
 
+        print("weqweqeqweqweqweqweqwe************************************************************************")
+        user= MyUser.objects.filter(pk=1).first()
+        profile = MyProfileSerializer(user)
+
+        return Response(profile.data, status=status.HTTP_200_OK)
 
 
 
 
 class ApiProductCreateAPIViewV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    # authentication_classes = [CookieJWTAuthentication]
+    # authentication_classes = [JWTAuthentication]
+    # authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
 
 
     def post(self, request, *args, **kwargs):
+        cleaned_data = {k.replace('"', ''): v for k, v in request.data.items()}
         user = request.user
-
+        print("user**********************************************************************")
+        print(user)
+        print("request**********************************************************************")
+        print(request.data)
+        print("request**********************************************************************")
         # دریافت داده‌های فرم
-        price = request.data.get('price')
-        weight = request.data.get('weight')
-        sell_buy_code = request.data.get('sell_buy')  # دریافت مقدار sell_buy
-        warranty = request.data.get('warranty') == 'True'
-        expire_time_days = request.data.get('expire_time')
-        description = request.data.get('description')
-        product_type_id = request.data.get('product_type')
-        attrs = request.data.get('attrs')
+        price = cleaned_data.get('price')
+        weight = cleaned_data.get('weight')
+        sell_buy_code = cleaned_data.get('sell_buy')  # دریافت مقدار sell_buy
+        warranty = cleaned_data.get('warranty') == 'True'
+        expire_time_days = cleaned_data.get('expire_time')
+        description = cleaned_data.get('description')
+        product_type_id = cleaned_data.get('product_type')
+        attrs = cleaned_data.get('attrs')
         attrs = json.loads(attrs) if attrs else []
 
+        print("**********************************HELLO************************************")
         # بررسی تاریخ انقضا
         if expire_time_days:
             expire_time = timezone.now() + timezone.timedelta(days=int(expire_time_days))
         else:
             expire_time = None
 
-
+        print("**********************************HELLO1************************************")
 
         # تبدیل مقدار sell_buy از عدد به متن
         if sell_buy_code == '1':
             sell_buy = Product.SELL
         else:
             sell_buy = Product.BUY
+        print("**********************************HELLO2************************************")
+
+        print(product_type_id)
+        print("product_type_id**********************************************************************")
+
+
 
         # بررسی نوع محصول
         product_type = get_object_or_404(ProductType, id=product_type_id)
-
+        print("product_type**********************************************************************")
+        print(product_type)
         # ذخیره محصول
         upc = random.randint(11111111111111111, 99999999999999999)
         product = Product(
@@ -1783,10 +1807,13 @@ class ApiProductCreateAPIViewV1(APIView):
         product.save()
 
         # ذخیره تصاویر
-        num_images = int(request.data.get('numpic', 0))
-
+        num_images = int(cleaned_data.get('numpic', 0))
+        print("num_images**********************************************************************")
+        print(num_images)
         for i in range(num_images):
             image = request.FILES.get(f'image{i}')
+            print("image**********************************************************************")
+            print(image)
             if image:
                 product_image = ProductImage(image=image, product=product)
                 product_image.save()
@@ -1794,7 +1821,11 @@ class ApiProductCreateAPIViewV1(APIView):
         # ذخیره ویژگی‌های محصول
         for attr in attrs:
             attribute = get_object_or_404(ProductAttribute, id=attr['attr'])
+            print("attribute**********************************************************************")
+            print(attribute)
             attribute_value = get_object_or_404(ProductAttributeValue, id=attr['value'])
+            print("attribute_value**********************************************************************")
+            print(attribute_value)
             ProductAttr(type=product_type, attr=attribute, value=attribute_value, product=product).save()
 
         return Response({"status": "success", "message": "Product added successfully!"}, status=status.HTTP_201_CREATED)

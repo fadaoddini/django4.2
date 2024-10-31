@@ -1,7 +1,7 @@
 from django.db import models, transaction
 from django.db.models import Count, Sum, Q
 from django.db.models.functions import Coalesce
-from custom_login.models import MyUser
+from login.models import MyUser
 
 
 class Transaction(models.Model):

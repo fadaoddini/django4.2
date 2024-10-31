@@ -12,7 +12,7 @@ from catalogue.views import product_list, ProductDetail, category_products, bran
     SellBidSingleBazarApi, BuyBidSingleBazarApi, SellSingleBazarApi, BuySingleBazarApi, ApiProductCreateAPIViewV1, \
     TypeByIdApi, ChartByTypeIdApi, BidSellListByTypeApi, BidBuyListByTypeApi, BidSellListChartApi, BidBuyListChartApi, \
     CategoryNameApi, AllTypeApi, BazarWithOptionalSelBuyApi, AllTypeWebApi, BazarWithOptionalSelBuyWebApi, \
-    BazarTypeByIdApi, BazarTypeByIdWebApi, SellSingleBazarWebApi, BuySingleBazarWebApi
+    BazarTypeByIdApi, BazarTypeByIdWebApi, SellSingleBazarWebApi, BuySingleBazarWebApi, ProfileProfile
 
 urlpatterns = [
     path('product/list/', product_list, name='product-list'),
@@ -93,7 +93,7 @@ urlpatterns = [
     path('v1/product_types', ProductTypeListAPIView.as_view(), name='product-type-list-api-v1'),
     path('v1/product_attributes', ProductAttributeListAPIView.as_view(), name='product-attribute-list-api-v1'),
     path('v1/attribute_values', AttributeValueListAPIView.as_view(), name='attribute-value-list-api-v1'),
-    path('v1/add_product_api/', ApiProductCreateAPIViewV1.as_view(), name='add-product-api-v1'),
+    path('v1/add_product_api', ApiProductCreateAPIViewV1.as_view(), name='add-product-api-v1'),
     path('v1/type/<int:id>/', TypeByIdApi.as_view(), name='type-by-id-api-v1'),
     path('v1/chart/<int:id>/', ChartByTypeIdApi.as_view(), name='chart-api-v1'),
     path('v1/sell/bid/all/<int:pk>/', BidSellListByTypeApi.as_view(), name='bid-sell-api-all'),
@@ -108,6 +108,11 @@ urlpatterns = [
     path('v1/bazar/bazar_with_optional_sel_buy', BazarWithOptionalSelBuyApi.as_view(), name='all-bazar-api'),
     path('v1/bazar/sell_buy_bazar', BazarWithOptionalSelBuyApi.as_view(), name='sell-buy-bazar-api'),
     path('v1/bazar/type', BazarTypeByIdApi.as_view(), name='type-id-bazar-api'),
+
+
+
+    path('v1/profile/profile', ProfileProfile.as_view(), name='profile-profile-api'),
+
 
 
 

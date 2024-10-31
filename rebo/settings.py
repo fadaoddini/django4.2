@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 from datetime import timedelta
 from rebo.local_settings import *
@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'catalogue.apps.CatalogueConfig',
     'transaction.apps.TransactionConfig',
     'index.apps.IndexConfig',
-    'custom_login.apps.CustomLoginConfig',
+    'login.apps.CustomLoginConfig',
     'learn.apps.LearnConfig',
     'bid.apps.BidConfig',
     'info.apps.InfoConfig',
@@ -48,10 +48,12 @@ INSTALLED_APPS = [
     'company.apps.CompanyConfig',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -132,6 +134,8 @@ USE_TZ = False
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 100000000
 # Default primary key field type
@@ -142,14 +146,12 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'login.mybackend.MobileBackend'
 ]
-AUTH_USER_MODEL = 'custom_login.MyUser'
+AUTH_USER_MODEL = 'login.MyUser'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-
-
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # عمر توکن دسترسی
@@ -157,3 +159,23 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+
+CORS_ALLOW_CREDENTIALS = True  # فعال کردن اجازه برای اعتبارنامه‌ها
+
+
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000',  'http://localhost:3000', 'http://194.5.205.54', 'https://rebo.ir']
+
+ADDRESS_SERVER = 'https://iscode.ir'
+BACKEND_URL = 'http://194.5.205.54'
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    "https://iscode.ir",
+    "https:rebo.ir"
+
+]

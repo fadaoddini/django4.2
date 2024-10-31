@@ -1,5 +1,5 @@
 from django.db import models
-from custom_login.models import MyUser
+from login.models import MyUser
 from django.contrib import messages
 
 
