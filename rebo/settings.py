@@ -161,21 +161,33 @@ SIMPLE_JWT = {
 }
 
 
-CORS_ALLOW_CREDENTIALS = True  # فعال کردن اجازه برای اعتبارنامه‌ها
+if os.getenv('DJANGO_ENV') == 'production':
+    CORS_ALLOW_CREDENTIALS = True  # فعال کردن اجازه برای اعتبارنامه‌ها
 
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_NAME = 'sessionid'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = False
+    CSRF_TRUSTED_ORIGINS = ['http://194.5.205.54', 'https://rebo.ir', 'https://iscode.ir']
 
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_NAME = 'sessionid'
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000',  'http://localhost:3000', 'http://194.5.205.54', 'https://rebo.ir']
+    ADDRESS_SERVER = 'https://iscode.ir'
+    BACKEND_URL = 'http://194.5.205.54'
+    CORS_ALLOWED_ORIGINS = [
+        "https://iscode.ir",
+        "https://rebo.ir"
+    ]
+else:
+    CORS_ALLOW_CREDENTIALS = True  # فعال کردن اجازه برای اعتبارنامه‌ها
 
-ADDRESS_SERVER = 'https://iscode.ir'
-BACKEND_URL = 'http://194.5.205.54'
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000",
-    "https://iscode.ir",
-    "https:rebo.ir"
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_NAME = 'sessionid'
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:3000']
 
-]
+    ADDRESS_SERVER = 'http://localhost:3000'
+    BACKEND_URL = 'http://localhost:8000'
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ]
