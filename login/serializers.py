@@ -47,7 +47,6 @@ class AddressSerializer(serializers.ModelSerializer):
         fields = ['id','receiver_name', 'address', 'postal_code', 'phone', 'city', 'sub_city', 'is_active']
 
 
-
 class MyProfileSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
@@ -56,13 +55,14 @@ class MyProfileSerializer(serializers.ModelSerializer):
     bid_count = serializers.SerializerMethodField()
     products = serializers.SerializerMethodField()
     bids = serializers.SerializerMethodField()
-
+    display_name = serializers.SerializerMethodField()  # اضافه کردن فیلد جدید
 
     class Meta:
         model = MyUser
         fields = (
             'first_name',
             'last_name',
+            'display_name',  # اضافه کردن فیلد جدید به لیست
             'status',
             'image',
             'mobile',
@@ -74,6 +74,12 @@ class MyProfileSerializer(serializers.ModelSerializer):
             'products',
             'bids',
         )
+
+    def get_display_name(self, obj):
+        # بررسی اینکه first_name و last_name خالی هستند یا نه
+        if not obj.first_name and not obj.last_name:
+            return "کاربر محترم"
+        return f"{obj.first_name} {obj.last_name}".strip()
 
     def get_status(self, obj):
         status = "Nothing"
@@ -101,9 +107,6 @@ class MyProfileSerializer(serializers.ModelSerializer):
         return ApiAllProductSerializer(products, many=True).data
 
     def get_bids(self, obj):
-        bid_rank = "1"
         bids = obj.bids.all()
         from bid.serializers import BidSerializer
         return BidSerializer(bids, many=True).data
-
-

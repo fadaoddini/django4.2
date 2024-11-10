@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from login.views import CookieJWTAuthentication
 from order.models import Payment, Gateway
 from order.utils import zpal_request_handler
 from rebo import settings
@@ -48,7 +47,7 @@ class CreateTransportApi(APIView):
 
 
 class CreateTransportApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -519,7 +518,7 @@ class AllTransportApiV1(APIView):
 
 
 class NotPayTransportReqApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -544,9 +543,8 @@ class NotPayTransportReqApiV1(APIView):
 
 
 class NotActiveTransportReqApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
     def post(self, request, *args, **kwargs):
         user = request.user
 
@@ -569,7 +567,7 @@ class NotActiveTransportReqApiV1(APIView):
 
 
 class ActiveTransportReqApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -597,7 +595,7 @@ class ActiveTransportReqApiV1(APIView):
 
 
 class MyTransportApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -623,7 +621,7 @@ class MyTransportApiV1(APIView):
 
 
 class ApiTransportReqDeleteV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
@@ -647,7 +645,7 @@ class ApiTransportReqDeleteV1(APIView):
 
 
 class PaymentApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -690,7 +688,7 @@ class PaymentApiV1(APIView):
 
 
 class PaymentVerifyApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -751,7 +749,7 @@ class PaymentVerifyApiV1(APIView):
 
 
 class AllLocationsApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -772,7 +770,7 @@ class AllLocationsApiV1(APIView):
 
 
 class CalculateRouteViewV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -847,7 +845,7 @@ class CalculateRouteViewV1(APIView):
 
 
 class CreateTransportReqApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -867,7 +865,7 @@ class CreateTransportReqApiV1(APIView):
 
 
 class ApiTransportReqDeleteV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
@@ -890,7 +888,7 @@ class ApiTransportReqDeleteV1(APIView):
 
 
 class AllReqTransportByTypeApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -924,7 +922,7 @@ class AllReqTransportByTypeApiV1(APIView):
 
 
 class AllReqTransportApiV1(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         paginator = PageNumberPagination()

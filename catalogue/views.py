@@ -9,7 +9,6 @@ from django.db.models import Prefetch
 from bid.serializers import BidSerializer
 from login.models import MyUser
 from login.serializers import MyProfileSerializer
-from login.views import CookieJWTAuthentication
 from order.models import Payment, Gateway
 from order.utils import zpal_request_handler
 from persiantools.jdatetime import JalaliDate
@@ -1134,43 +1133,24 @@ class AllTypeApi(APIView):
 
 
 class AllTypeWebApi(APIView):
-    # اضافه کردن احراز هویت
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-
-        print("iiiiii")
-        print("Headers: ", request.headers)
-        print("Authorization: ", request.headers.get('Authorization'))
-
-        print("request************************************")
-        print(request)
-
-
-        # فراخوانی تمام داده‌ها
         types = ProductType.objects.all()
-
-        # گروه‌بندی بر اساس دسته‌بندی
         grouped_data = self.group_by_category(types)
-
-        # سریالایزر برای داده‌های گروه‌بندی شده
         serializer = CategoryTypeSerializer(grouped_data, many=True)
-
-        # بازگشت پاسخ با ساختار جدید
         return Response(serializer.data, content_type='application/json; charset=UTF-8')
 
     def group_by_category(self, product_types):
-        # تابعی برای گروه‌بندی محصولات بر اساس دسته‌بندی
-        grouped_data = defaultdict(lambda: {'category': '', 'cat_id': 0, 'types': []})
 
+        grouped_data = defaultdict(lambda: {'category': '', 'cat_id': 0, 'types': []})
         for product in product_types:
             category_name = product.category.name
             category_id = product.category.id
             grouped_data[category_name]['category'] = category_name
             grouped_data[category_name]['cat_id'] = category_id
             grouped_data[category_name]['types'].append(product)
-
         return list(grouped_data.values())
 
 
@@ -1267,7 +1247,7 @@ class BazarWithOptionalSelBuyApi(APIView):
 
 
 class BazarWithOptionalSelBuyWebApi(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         sell_buy = request.GET.get('sell_buy')
@@ -1306,12 +1286,15 @@ class BazarTypeByIdApi(APIView):
 
 
 class BazarTypeByIdWebApi(APIView):
-
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        sell_buy = request.GET.get('sell_buy')
+        sell_buy_get = request.GET.get('sell_buy')
+        if (sell_buy_get=="sell"):
+            sell_buy = 1
+        else:
+            sell_buy = 2
         pk = request.GET.get('type_id')
         product_type = ProductType.objects.filter(pk=pk).first()
         if sell_buy:
@@ -1433,10 +1416,12 @@ class BuySingleBazarApi(APIView):
 
 
 class SellSingleBazarWebApi(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     def get(self, request, pk, *args, **kwargs):
         product = Product.objects.filter(pk=pk).first()
+        print("product")
+        print(product)
         if not product:
             return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1446,10 +1431,12 @@ class SellSingleBazarWebApi(APIView):
 
 
 class BuySingleBazarWebApi(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     def get(self, request, pk, *args, **kwargs):
         product = Product.objects.filter(pk=pk).first()
+        print("product")
+        print(product)
         if not product:
             return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1739,7 +1726,7 @@ class ProfileProfile(APIView):
 
 class ApiProductCreateAPIViewV1(APIView):
     # authentication_classes = [CookieJWTAuthentication]
-    # authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     # authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -1832,7 +1819,7 @@ class ApiProductCreateAPIViewV1(APIView):
 
 
 class ChartByTypeIdApi(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id, *args, **kwargs):

@@ -154,10 +154,14 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # عمر توکن دسترسی
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # عمر توکن رفرش
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=10),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
 }
 
 
@@ -165,29 +169,39 @@ if os.getenv('DJANGO_ENV') == 'production':
     CORS_ALLOW_CREDENTIALS = True  # فعال کردن اجازه برای اعتبارنامه‌ها
 
     SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_NAME = 'sessionid'
     SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = False
-    CSRF_TRUSTED_ORIGINS = ['http://194.5.205.54', 'https://rebo.ir', 'https://iscode.ir']
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS = ['http://194.5.205.54', 'https://rebo.ir', 'http://rebo.ir']
 
-    ADDRESS_SERVER = 'https://iscode.ir'
-    BACKEND_URL = 'http://194.5.205.54'
+    ADDRESS_SERVER = 'https://rebo.ir'
+    BACKEND_URL = 'https://app.rebo.ir'
     CORS_ALLOWED_ORIGINS = [
-        "https://iscode.ir",
+        "https://app.rebo.ir",
         "https://rebo.ir"
+    ]
+    CORS_ALLOW_HEADERS = [
+        'Authorization',
+        'Content-Type',
+        'X-CSRFToken',
+        'x-refresh-token',
     ]
 else:
     CORS_ALLOW_CREDENTIALS = True  # فعال کردن اجازه برای اعتبارنامه‌ها
 
     SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_NAME = 'sessionid'
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
     CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:3000']
-
+    CORS_ALLOW_ALL_ORIGINS = True
     ADDRESS_SERVER = 'http://localhost:3000'
     BACKEND_URL = 'http://localhost:8000'
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://localhost:8000",
+    ]
+    CORS_ALLOW_HEADERS = [
+        'Authorization',
+        'Content-Type',
+        'X-CSRFToken',
+        'x-refresh-token',
     ]

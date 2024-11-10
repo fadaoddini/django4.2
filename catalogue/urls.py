@@ -100,8 +100,6 @@ urlpatterns = [
     path('v1/buy/bid/all/<int:pk>/', BidBuyListByTypeApi.as_view(), name='bid-buy-api-all'),
 
 
-
-
     #mobile
     path('v1/sell/single/mob/<int:pk>', SellSingleBazarApi.as_view(), name='sell-api-single'),
     path('v1/buy/single/mob/<int:pk>', BuySingleBazarApi.as_view(), name='buy-api-single'),
@@ -109,18 +107,20 @@ urlpatterns = [
     path('v1/bazar/sell_buy_bazar', BazarWithOptionalSelBuyApi.as_view(), name='sell-buy-bazar-api'),
     path('v1/bazar/type', BazarTypeByIdApi.as_view(), name='type-id-bazar-api'),
 
-
-
     path('v1/profile/profile', ProfileProfile.as_view(), name='profile-profile-api'),
 
-
-
-
     # web
+
+
+    path('v1/bazar/sell_buy_bazar_web', BazarWithOptionalSelBuyWebApi.as_view(), name='sell-buy-bazar-web-api'),
+
+
+
+
+
+
+    path('v1/all_type_web', AllTypeWebApi.as_view(), name='all-type-web'),
+    path('v1/bazar/type_web', BazarTypeByIdWebApi.as_view(), name='type-id-bazar-web-api'),
     path('v1/sell/single/<int:pk>', SellSingleBazarWebApi.as_view(), name='sell-api-single'),
     path('v1/buy/single/<int:pk>', BuySingleBazarWebApi.as_view(), name='buy-api-single'),
-    path('v1/all_type_web', AllTypeWebApi.as_view(), name='all-type-web'),
-    path('v1/bazar/sell_buy_bazar_web', BazarWithOptionalSelBuyWebApi.as_view(), name='sell-buy-bazar-web-api'),
-    path('v1/bazar/type_web', BazarTypeByIdWebApi.as_view(), name='type-id-bazar-web-api'),
-
 ]

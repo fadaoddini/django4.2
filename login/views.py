@@ -1,17 +1,11 @@
 import json
-from datetime import datetime, timedelta
-from rest_framework import generics
-import jwt
-import requests
-from django.contrib import messages
-from django.contrib.auth import login
+from datetime import datetime
+
 from django.contrib.auth import logout
-from django.db import transaction as tran2
-from django.http import HttpResponseRedirect, JsonResponse
-from django.middleware.csrf import get_token
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -21,90 +15,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication  # مطمئن شوید که این پکیج را نصب کرده‌اید
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-
-from bid.models import Bid
-from bid.serializers import BidSerializer
-from catalogue.models import Product
-from login import forms, helper
+from rest_framework.permissions import AllowAny
+from login import helper
 from login.models import MyUser, Follow, Address
 from login.serializers import MyUserSerializer, AddressSerializer, MyProfileSerializer
-from rebo import settings
-from transaction.models import Transaction
-from transaction.views import add_balance_user
-
-
-def verify_otp(request):
-    try:
-        context = dict()
-        mobile = request.session.get('user_mobile')
-        user = MyUser.objects.get(mobile=mobile)
-        if request.method == "POST":
-            # check otp expiration
-            if not helper.check_otp_expiration(mobile):
-                messages.error(request, "کد شما اعتبار زمانی خود را از دست داده است لطفا مجددا سعی نمائید!")
-                return HttpResponseRedirect(reverse_lazy('login-mobile'))
-            if user.otp != int(request.POST.get('otp')):
-                messages.error(request, "در وارد کردن کد ارسال شده بیشتر دقت کنید گویا اشتباه وارد می کنید!")
-                return HttpResponseRedirect(reverse_lazy('login-mobile'))
-            user.is_active = True
-            user.save()
-            login(request, user)
-            if user.is_active is True:
-                return HttpResponseRedirect(reverse_lazy('index'))
-            return HttpResponseRedirect(reverse_lazy('profile'))
-        context['mobile'] = mobile
-        return render(request, 'login/verify.html', context=context)
-    except MyUser.DoesNotExist:
-        return HttpResponseRedirect(reverse_lazy('login-mobile'))
-
-
-def register_user(request):
-
-    if request.user.is_authenticated:
-        messages.info(request, "کاربر گرامی خوش آمدید!")
-        return HttpResponseRedirect(reverse_lazy('index'))
-    form = forms.RegisterUser
-    if request.method == "POST":
-        try:
-            if "mobile" in request.POST:
-                mobile = request.POST.get('mobile')
-
-                user = MyUser.objects.get(mobile=mobile)
-                # check otp exists
-                if helper.check_otp_expiration(mobile):
-                    messages.error(request, "شما به تازگی پیامکی دریافت نموده اید و هنوز کد شما معتبر است!")
-                    return HttpResponseRedirect(reverse_lazy('verify-otp'))
-                # send otp
-                otp = helper.create_random_otp()
-                helper.send_otp(mobile, otp)
-                # save otp
-                user.otp = otp
-                user.save()
-                request.session['user_mobile'] = user.mobile
-                # redirect to verify code
-                return HttpResponseRedirect(reverse_lazy('verify-otp'))
-        except MyUser.DoesNotExist:
-
-            form = forms.RegisterUser(request.POST)
-
-            if form.is_valid():
-
-                with tran2.atomic():
-                    user = form.save(commit=False)
-                    # send otp
-                    otp = helper.create_random_otp()
-                    helper.send_otp(mobile, otp)
-                    # save otp
-                    user.otp = otp
-                    user.is_active = False
-                    user.save()
-                    # sharje hadye sabtenam
-                    transaction = Transaction(user=user, transaction_type=1, amount=200000)
-                    transaction.save()
-                    add_balance_user(request, user.pk)
-                    request.session['user_mobile'] = user.mobile
-                    return HttpResponseRedirect(reverse_lazy('verify-otp'))
-    return render(request, 'login/login.html', {'form': form})
 
 
 
@@ -138,6 +52,8 @@ class SendOtp(APIView):
             helper.send_otp(mobile, otp)
             # ذخیره OTP و به‌روزرسانی زمان ارسال
             user.otp = otp
+            user.num_bid = 50000
+            user.bider = True
             user.otp_create_time = datetime.now()  # Update OTP creation time
             user.save()
 
@@ -158,62 +74,70 @@ class VerifyCode(APIView):
         body = json.loads(body_unicode)
         mobile = body['mobile']
         code = body['code']
-
-        messege = "کد شما صحیح بود"
+        # متغیرهای پیش‌فرض
+        message = "کد شما صحیح بود"
         status = "ok"
+        refresh_token1 = "poooooch"
+        access_token1 = "poooooch"
+
+        # جستجوی کاربر با موبایل وارد شده
         user = MyUser.objects.filter(mobile=mobile)
+
         if user.exists():
             user = user.first()
-            # res = get_tokens_for_user(mobile)
-            refresh = RefreshToken.for_user(user)
-            refresh_token = str(refresh)
-            access_token = str(refresh.access_token)
+
+            # چک کردن اعتبار کد OTP
             if not helper.check_otp_expiration(mobile):
-                messege = f"کد شما اعتبار زمانی خود را از دست داده است لطفا مجددا سعی نمائید!"
+                message = "کد شما اعتبار زمانی خود را از دست داده است لطفا مجددا سعی نمائید!"
                 status = "failed"
-                refresh_token1 = "poooooch"
-                access_token1 = "poooooch"
                 data = {
                     'status': status,
-                    'messege': messege,
+                    'messege': message,
                     'refresh_token': refresh_token1,
                     'access_token': access_token1,
                 }
                 return Response(data, content_type='application/json; charset=UTF-8')
+
+            # چک کردن صحت کد وارد شده
             if user.otp != int(code):
-                messege = f"در وارد کردن کد ارسال شده بیشتر دقت کنید گویا اشتباه وارد می کنید!"
+                message = "کد وارد شده صحیح نیست. لطفاً دوباره تلاش کنید."
                 status = "failed"
-                refresh_token1 = "poooooch"
-                access_token1 = "poooooch"
                 data = {
                     'status': status,
-                    'messege': messege,
+                    'messege': message,
                     'refresh_token': refresh_token1,
                     'access_token': access_token1,
                 }
                 return Response(data)
-            userid = user.pk
+
+            # اگر کد صحیح است، کاربر فعال می‌شود
             user.is_active = True
             user.save()
+
+            # ایجاد توکن‌های جدید برای کاربر
+            refresh = RefreshToken.for_user(user)
+            refresh_token = str(refresh)
+            access_token = str(refresh.access_token)
+
+            # ارسال پاسخ با توکن‌ها
             data = {
                 'status': status,
-                'messege': messege,
+                'messege': message,
                 'refresh_token': refresh_token,
                 'access_token': access_token,
-                'user_id': userid,
+                'user_id': user.pk,
             }
             return Response(data, content_type='application/json; charset=UTF-8')
 
         else:
-            messege = f"کاربری با اطلاعات فوق وجود ندارد!"
+            # اگر کاربر پیدا نشد
+            message = "کاربری با اطلاعات فوق وجود ندارد!"
             status = "failed"
-            refresh_token = "poooooch"
-            access_token = "poooooch"
             data = {
                 'status': status,
-                'messege': messege,
-                'refresh_token': refresh_token,
-                'access_token': access_token
+                'messege': message,
+                'refresh_token': refresh_token1,
+                'access_token': access_token1
             }
             return Response(data, content_type='application/json; charset=UTF-8')
 
@@ -255,174 +179,8 @@ class VerifyNameApi(APIView):
 
 
 
-
-def logouti(request):
-    # خروج کاربر
-    logout(request)
-
-    # حذف کوکی‌های توکن
-    response = HttpResponseRedirect(reverse_lazy('index'))
-    response.delete_cookie('accessToken')  # تغییر نام به access_token
-    response.delete_cookie('access_token')  # تغییر نام به access_token
-
-    response.delete_cookie('refreshToken')  # تغییر نام به refresh_token
-    response.delete_cookie('refresh_token')  # تغییر نام به refresh_token
-
-
-    # نمایش پیام خروج
-    messages.info(request, "شما از سامانه خارج شدید")
-
-    return response
-
-
-
-class VerifyCodeV1(APIView):
-    def post(self, request, *args, **kwargs):
-        body_unicode = request.body.decode('utf-8')
-        body = json.loads(body_unicode)
-        mobile = body['mobile']
-        code = body['code']
-
-        user = MyUser.objects.filter(mobile=mobile).first()
-        if user:
-            refresh = RefreshToken.for_user(user)
-            refresh_token = str(refresh)
-            access_token = str(refresh.access_token)
-
-            # بررسی انقضای کد OTP
-            if not helper.check_otp_expiration(mobile):
-                return JsonResponse({'status': 'failed', 'message': 'کد شما اعتبار زمانی خود را از دست داده است!'}, status=400)
-
-            # بررسی صحت کد OTP
-            if user.otp != int(code):
-                return JsonResponse({'status': 'failed', 'message': 'در وارد کردن کد ارسال شده بیشتر دقت کنید!'}, status=400)
-
-            # فعال‌سازی حساب کاربری
-            user.is_active = True
-            user.save()
-
-            # دریافت CSRF token
-            csrf_token = get_token(request)
-
-            response = JsonResponse({
-                'status': 'ok',
-                'message': 'کد شما صحیح بود',
-                'user_id': user.pk,
-            })
-
-            response.set_cookie('accessToken', access_token, httponly=True, secure=False, samesite='Lax')
-            response.set_cookie('refreshToken', refresh_token, httponly=False, secure=False, samesite='Lax')
-            response.set_cookie('csrftoken', csrf_token, httponly=False, secure=False, samesite='Lax')
-
-            return response
-        else:
-            return JsonResponse({'status': 'failed', 'message': 'کاربری با اطلاعات فوق وجود ندارد!'}, status=400)
-
-
-
-class CookieJWTAuthentication(JWTAuthentication):
-
-    def authenticate(self, request):
-        # دریافت Access Token از کوکی
-        access_token = request.COOKIES.get('accessToken')
-        refresh_token = request.COOKIES.get('refreshToken')
-
-        if not access_token:
-            raise AuthenticationFailed('Access token not found in cookies.')
-
-        try:
-            # بررسی اعتبار توکن دسترسی
-            validated_token = jwt.decode(access_token, settings.SECRET_KEY, algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
-            # اگر توکن دسترسی منقضی شده است
-            if refresh_token:
-                try:
-                    # بررسی و decode توکن رفرش
-                    refresh_decoded = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=['HS256'])
-                    # تولید یک توکن دسترسی جدید
-                    new_access_token = jwt.encode({'user_id': refresh_decoded['user_id'], 'exp': datetime.utcnow() + timedelta(minutes=5)}, settings.SECRET_KEY, algorithm='HS256')
-
-                    # ساختن response جدید و ست کردن کوکی
-                    response = JsonResponse({'status': 'success', 'message': 'Token refreshed.'})
-
-                    # توسعه
-                    # response.set_cookie('accessToken', new_access_token, httponly=True, secure=False, samesite='Lax')
-
-
-                    # پروداکشن
-                    response.set_cookie('accessToken', new_access_token, httponly=False, secure=False, samesite='Lax')
-
-                    # دوباره بررسی معتبر بودن توکن جدید
-                    validated_token = jwt.decode(new_access_token, settings.SECRET_KEY, algorithms=['HS256'])
-                except jwt.ExpiredSignatureError:
-                    raise AuthenticationFailed('Refresh token has expired.')
-                except jwt.InvalidTokenError:
-                    raise AuthenticationFailed('Invalid refresh token.')
-            else:
-                raise AuthenticationFailed('Access token expired and refresh token not found.')
-
-        # بازگرداندن کاربر و توکن معتبر
-        return self.get_user(validated_token), validated_token
-
-
-
-class CheckTokenView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user  # کاربر احراز هویت‌شده
-        access_token = request.COOKIES.get('accessToken')
-        refresh_token = request.COOKIES.get('refreshToken')
-
-
-        # بررسی زمان انقضای توکن و رفرش آن
-        try:
-            # بررسی اعتبار توکن
-            validated_token = JWTAuthentication().get_validated_token(access_token)
-        except TokenError:
-            if refresh_token:
-                # اگر access_token منقضی شده، تلاش برای رفرش آن
-                refresh_data = {'refresh': refresh_token}
-                try:
-                    refresh_response = requests.post(f'{settings.BACKEND_URL}/api/token/refresh/', data=refresh_data)
-                except requests.RequestException as e:
-
-                    return JsonResponse({"status": "failed", "message": "خطا در ارتباط با سرور."}, status=500)
-
-                if refresh_response.status_code == 200:
-                    # توکن جدید دریافت شد
-                    new_access_token = refresh_response.json().get('access')
-                    response = JsonResponse({
-                        "status": "success",
-                        "message": "توکن با موفقیت رفرش شد",
-                        "user": str(user)
-                    })
-                    # دریافت CSRF token
-                    csrf_token = get_token(request)
-
-                    response.set_cookie('accessToken', access_token, httponly=True, secure=False, samesite='Lax')
-                    response.set_cookie('refreshToken', refresh_token, httponly=False, secure=False, samesite='Lax')
-                    response.set_cookie('csrftoken', csrf_token, httponly=False, secure=False, samesite='Lax')
-
-                    return response
-                else:
-                    # رفرش توکن ناموفق بود
-                    status_error = "رفرش توکن ناموفق بود"
-                    return JsonResponse({"status": status_error, "message": "رفرش توکن ناموفق بود."}, status=401)
-            else:
-                # اگر توکن رفرش وجود ندارد
-
-                status_error = "توکن رفرش وجود ندارد"
-                return JsonResponse({"status": status_error, "message": "رفرش توکن وجود ندارد."}, status=407)
-
-        # اگر access_token معتبر است
-        status_error = "access_token معتبر است"
-        return Response({"status": status_error, "message": "توکن معتبر است.", "user": str(user)})
-
-
 class GetInfo(APIView):
-    authentication_classes = [CookieJWTAuthentication]  # استفاده از کلاس احراز هویت جدید
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         try:
@@ -443,8 +201,8 @@ class GetInfo(APIView):
 
 
 class SetImageUser(APIView):
-    authentication_classes = [CookieJWTAuthentication]  # احراز هویت با JWT در کوکی
-    permission_classes = [IsAuthenticated]  # تنها کاربران احراز هویت‌شده می‌توانند به این endpoint دسترسی داشته باشند
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)  # اجازه می‌دهد فایل‌های چندقسمتی را دریافت کند
 
     def post(self, request):
@@ -464,21 +222,22 @@ class SetImageUser(APIView):
         return Response({"message": "Image uploaded successfully!"}, status=status.HTTP_200_OK)
 
 
-def logoutV1(request):
-    logout(request)
-    # ایجاد response با موفقیت و تعیین وضعیت
-    response = JsonResponse({"message": "شما از سامانه خارج شدید"}, status=200)
-    # حذف کوکی‌های توکن
-    response.delete_cookie('accessToken')
-    response.delete_cookie('access_token')
-    response.delete_cookie('refreshToken')
-    response.delete_cookie('refresh_token')
-    return response
+
+class LogoutV1(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            logout(request)
+            return Response({"message": "با موفقیت از سیستم خارج شدید"}, status=200)
+        except Exception as e:
+            return Response({"error": f"خطا در هنگام پردازش درخواست: {str(e)}"}, status=500)
 
 
 
 class FollowAPIView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -499,7 +258,7 @@ class FollowAPIView(APIView):
 
 
 class UnFollowAPIView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
@@ -518,7 +277,7 @@ class UnFollowAPIView(APIView):
 
 
 class IsFollowAPIView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
@@ -533,7 +292,7 @@ class IsFollowAPIView(APIView):
 
 
 class UserDetailsFollowingAPIView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
@@ -565,7 +324,7 @@ class UserDetailsFollowingAPIView(APIView):
 
 
 class AddressListCreateView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -587,7 +346,7 @@ class AddressListCreateView(APIView):
 
 
 class AddressDetailView(APIView):
-    authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
@@ -622,6 +381,7 @@ class AddressDetailView(APIView):
 
 
 class CheckTokenMobile(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]  # برای اطمینان از احراز هویت اولیه
 
     def post(self, request, *args, **kwargs):
@@ -671,15 +431,64 @@ class CheckTokenMobile(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CheckToken(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    @csrf_exempt
+    def post(self, request):
+        access_token = request.headers.get('Authorization', None)
+        refresh_token = request.headers.get('x-refresh-token', None)
+
+        if access_token is None:
+            raise AuthenticationFailed("Authorization header is missing")
+
+        # حذف "Bearer" از ابتدای توکن
+        access_token = access_token.split(" ")[1]
+
+        try:
+            # بررسی اعتبار access token
+            token = AccessToken(access_token)
+            user = token.payload.get('user_id')
+
+            return Response({
+                'status': 'ok',
+                'message': 'توکن معتبر است',
+                'user': str(user),
+            }, status=200)
+
+        except Exception:
+            if not refresh_token:
+                raise AuthenticationFailed("نیازمند رفرش توکن هستیم")
+
+            try:
+                refresh = RefreshToken(refresh_token)
+                new_access_token = str(refresh.access_token)
+                new_refresh_token = str(refresh)
+
+                return Response({
+                    'status': 'ok',
+                    'message': 'توکن جدید ساخته شد',
+                    'access_token': new_access_token,
+                    'refresh_token': new_refresh_token,
+                }, status=200)
+
+            except Exception as e:
+                return Response({
+                    'status': 'error',
+                    'message': f'خطا در تولید توکن جدید: {str(e)}',
+                }, status=401)
+
 
 
 class ProfileInfoApi(generics.GenericAPIView):
-    authentication_classes = [CookieJWTAuthentication]
+    serializer_class = MyProfileSerializer
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    serializer_class = MyProfileSerializer
-
     def get(self, request):
+        # اکنون request.user با توجه به توکن احراز هویت، کاربر شناسایی شده است
         profile = MyProfileSerializer(request.user)
-
         return Response(profile.data, status=status.HTTP_200_OK)
+
+

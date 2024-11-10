@@ -15,7 +15,7 @@ urlpatterns = [
 
 
 
-    path('v1/add_bid_api/', BidView.as_view(), name='add-bid-api-v1'),
+    path('v1/add_bid_api', BidView.as_view(), name='add-bid-api-v1'),
     path('v1/add_bid_mob_api', BidMobView.as_view(), name='add-bid-api-mob-v1'),
 
 ]

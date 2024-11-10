@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication  # مطمئن شوید که این پکیج را نصب کرده‌اید
 
 from login.models import MyUser
-from login.views import CookieJWTAuthentication
+
 from order.models import Payment, Gateway
 from order.utils import zpal_request_handler
 from rebo import settings
@@ -17,8 +17,8 @@ from .serializers import BidSerializer
 
 
 class BidView(APIView):
-    authentication_classes = [CookieJWTAuthentication]  # احراز هویت با JWT در کوکی
-    permission_classes = [IsAuthenticated]  # تنها کاربران احراز هویت‌شده می‌توانند به این endpoint دسترسی داشته باشند
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
