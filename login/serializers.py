@@ -4,6 +4,20 @@ from bid.models import Bid
 from login.models import MyUser, Follow, Address
 
 
+class EditProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUser
+        fields = ['first_name', 'last_name', 'email', 'mobile']
+        read_only_fields = ['mobile']  # موبایل فقط قابل مشاهده باشد
+
+    def validate_email(self, value):
+        """بررسی تکراری نبودن ایمیل."""
+        user = self.instance
+        if MyUser.objects.filter(email=value).exclude(id=user.id).exists():
+            raise serializers.ValidationError("این ایمیل قبلاً استفاده شده است.")
+        return value
+
+
 class MyUserSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
@@ -66,6 +80,7 @@ class MyProfileSerializer(serializers.ModelSerializer):
             'status',
             'image',
             'mobile',
+            'email',
             'id',
             'followers_count',
             'following_count',

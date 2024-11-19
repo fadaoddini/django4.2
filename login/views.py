@@ -18,8 +18,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework.permissions import AllowAny
 from login import helper
 from login.models import MyUser, Follow, Address
-from login.serializers import MyUserSerializer, AddressSerializer, MyProfileSerializer
-
+from login.serializers import MyUserSerializer, AddressSerializer, MyProfileSerializer, EditProfileSerializer
 
 
 class SendOtp(APIView):
@@ -492,3 +491,20 @@ class ProfileInfoApi(generics.GenericAPIView):
         return Response(profile.data, status=status.HTTP_200_OK)
 
 
+class EditProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """برگرداندن اطلاعات کاربر برای فرم ویرایش."""
+        user = request.user
+        serializer = EditProfileSerializer(user)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """ذخیره تغییرات اطلاعات کاربر."""
+        user = request.user
+        serializer = EditProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "اطلاعات با موفقیت ذخیره شد."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

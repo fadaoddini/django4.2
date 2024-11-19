@@ -2,7 +2,8 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from login.views import SendOtp, VerifyCode, VerifyNameApi, \
     SetImageUser, LogoutV1, GetInfo, FollowAPIView, UnFollowAPIView, IsFollowAPIView, \
-    UserDetailsFollowingAPIView, AddressListCreateView, AddressDetailView, CheckTokenMobile, ProfileInfoApi, CheckToken
+    UserDetailsFollowingAPIView, AddressListCreateView, AddressDetailView, CheckTokenMobile, ProfileInfoApi, CheckToken, \
+    EditProfileView
 
 urlpatterns = [
 
@@ -28,4 +29,5 @@ urlpatterns = [
     path('v1/verifyCode', VerifyCode.as_view(), name='verify'),
     path('v1/refreshToken', TokenRefreshView.as_view(), name='token_refresh'),
     path('v1/profile/info', ProfileInfoApi.as_view(), name='profile-info-v1'),
+    path('v1/edit_profile_user', EditProfileView.as_view(), name='edit-profile-user'),
 ]
