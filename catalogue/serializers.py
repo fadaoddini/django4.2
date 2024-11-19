@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from bid.models import Bid
 from catalogue.models import Product, ProductImage, ProductAttribute, ProductAttributeValue, Brand, Category, \
     ProductType, ProductAttr
 import datetime
@@ -426,3 +428,41 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ('image', )
+
+
+class ApiMyBidsSerializer(serializers.ModelSerializer):
+    product_details = serializers.SerializerMethodField()
+    rank = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Bid
+        fields = ['id', 'product', 'price', 'weight', 'result', 'product_details', 'rank']
+
+    def get_product_details(self, obj):
+        """
+        جزئیات محصول مرتبط با پیشنهاد
+        """
+        product = obj.product
+        return {
+            "id": product.id,
+            "sell_buy": product.sell_buy,
+            "price": product.price,
+            "weight": product.weight,
+            "description": product.description,
+            "status": product.get_status_display(),  # نمایش وضعیت به صورت متنی
+            "expire_time": product.expire_time,
+            "is_active": product.is_active,
+        }
+
+    def get_rank(self, obj):
+        """
+        محاسبه رتبه پیشنهاد جاری نسبت به پیشنهادات دیگر روی همین محصول
+        """
+        # همه پیشنهادات مرتبط با محصول جاری
+        bids = Bid.objects.filter(product=obj.product).order_by('price')
+
+        # لیست قیمت‌ها را می‌گیریم و رتبه قیمت جاری را پیدا می‌کنیم
+        prices = [bid.price for bid in bids]
+        rank = prices.index(obj.price) + 1  # رتبه (index از 0 شروع می‌شود، پس +1 می‌کنیم)
+
+        return rank
