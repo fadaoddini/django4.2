@@ -1331,48 +1331,31 @@ class InBazarApi(APIView):
         return Response(context, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
 
 
-
-
 class SellSingleBazarApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, *args, **kwargs):
-        # گرفتن اطلاعات محصول
+        # دریافت محصول بر اساس pk
         product = Product.objects.filter(pk=pk).first()
         if not product:
             return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # سریالیز کردن اطلاعات محصول
+        # سریالایز کردن اطلاعات محصول
         product_serializer = SellSingleProductSerializer(product)
 
-        # پیدا کردن محصولات مشابه بر اساس نوع محصول
-        product_type = product.product_type
-        products = Product.objects.filter(sell_buy=1, product_type=product_type).prefetch_related(
-            Prefetch('bids', queryset=Bid.objects.order_by('-price'))
-        )
+        # دریافت بیدهای محصول و مرتب‌سازی بر اساس قیمت
+        bids = product.bids.all().order_by('-price')[:20]
 
-        # جمع‌آوری بیدهای محصولات مشابه
-        bids = []
-        for prod in products:
-            bids.extend(prod.bids.all())
+        # سریالایز کردن اطلاعات بیدها
+        bids_serializer = BidSerializer(bids, many=True, context={'request': request})
 
-        # مرتب‌سازی بیدها بر اساس قیمت
-        sorted_bids = sorted(bids, key=lambda x: x.price, reverse=True)
-
-        # محدود کردن لیست به 20 بید برتر
-        limited_bids = sorted_bids[:20]
-
-        # سریالیز کردن بیدها
-        bids_serializer = BidSerializer(limited_bids, many=True, context={'request': request})
-
-        # ترکیب داده‌های محصول و بیدها
+        # آماده‌سازی داده‌ها برای پاسخ
         data = {
             'product': product_serializer.data,
             'bids': bids_serializer.data
         }
 
         return Response(data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
-
 
 class BuySingleBazarApi(APIView):
     permission_classes = [IsAuthenticated]
@@ -1383,28 +1366,14 @@ class BuySingleBazarApi(APIView):
         if not product:
             return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # سریالیز کردن اطلاعات محصول
+        # سریالایز کردن اطلاعات محصول
         product_serializer = BuySingleProductSerializer(product)
 
-        # پیدا کردن محصولات مشابه بر اساس نوع محصول
-        product_type = product.product_type
-        products = Product.objects.filter(sell_buy=2, product_type=product_type).prefetch_related(
-            Prefetch('bids', queryset=Bid.objects.order_by('price'))
-        )
+        # دریافت بیدهای محصول و مرتب‌سازی بر اساس قیمت به صورت صعودی
+        bids = product.bids.all().order_by('price')[:20]
 
-        # جمع‌آوری بیدهای محصولات مشابه
-        bids = []
-        for prod in products:
-            bids.extend(prod.bids.all())
-
-        # مرتب‌سازی بیدها بر اساس قیمت (صعودی)
-        sorted_bids = sorted(bids, key=lambda x: x.price)
-
-        # محدود کردن لیست به 20 بید برتر
-        limited_bids = sorted_bids[:20]
-
-        # سریالیز کردن بیدها
-        bids_serializer = BidSerializer(limited_bids, many=True, context={'request': request})
+        # سریالایز کردن بیدها
+        bids_serializer = BidSerializer(bids, many=True, context={'request': request})
 
         # ترکیب داده‌های محصول و بیدها
         data = {
@@ -1413,6 +1382,7 @@ class BuySingleBazarApi(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
+
 
 
 class SellSingleBazarWebApi(APIView):

@@ -488,7 +488,8 @@ class ProfileInfoApi(generics.GenericAPIView):
     def get(self, request):
         # اکنون request.user با توجه به توکن احراز هویت، کاربر شناسایی شده است
         profile = MyProfileSerializer(request.user)
-        return Response(profile.data, status=status.HTTP_200_OK)
+        return Response(profile.data, status=status.HTTP_200_OK,
+                        content_type='application/json; charset=UTF-8')
 
 
 class EditProfileView(APIView):
