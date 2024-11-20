@@ -1869,14 +1869,26 @@ class MyProductsApi(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        try:
-            body_unicode = request.body.decode('utf-8')
-            body = json.loads(body_unicode)
-        except json.JSONDecodeError:
-            return Response({"error": "Invalid JSON"}, status=400)
+    def post(self, request, *args, **kwargs):
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
         user = request.user
         status = body.get('status')
+        my_products = Product.objects.filter(user=user, status=status).all()
+        all_products = ApiAllProductSerializer(my_products.order_by('price')[:100], many=True)
+        return Response(all_products.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
+
+
+class UserProductsApi(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        status = body.get('status')
+        user_id = body.get('user_id')
+        user = get_object_or_404(MyUser, pk=user_id)
         my_products = Product.objects.filter(user=user, status=status).all()
         all_products = ApiAllProductSerializer(my_products.order_by('price')[:100], many=True)
         return Response(all_products.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
