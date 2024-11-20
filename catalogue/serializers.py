@@ -442,6 +442,14 @@ class ApiMyBidsSerializer(serializers.ModelSerializer):
         """
         محاسبه رتبه پیشنهاد جاری نسبت به پیشنهادات دیگر روی همین محصول
         """
-        # شمارش تعداد پیشنهادات با قیمت کمتر از قیمت جاری
-        rank = Bid.objects.filter(product=obj.product, price__lt=obj.price).count() + 1
+        # بررسی نوع فروش یا خرید
+        sell_buy = obj.product.sell_buy
+
+        if sell_buy == 1:  # برای خرید (صعودی)
+            rank = Bid.objects.filter(product=obj.product, price__lt=obj.price).count() + 1
+        elif sell_buy == 2:  # برای فروش (نزولی)
+            rank = Bid.objects.filter(product=obj.product, price__gt=obj.price).count() + 1
+        else:
+            rank = None  # مقدار پیش‌فرض اگر sell_buy تعریف نشده باشد یا مقدار غیرمعتبر باشد
+
         return rank
