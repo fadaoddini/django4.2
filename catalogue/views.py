@@ -1873,8 +1873,8 @@ class MyProductsApi(APIView):
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
         user = request.user
-        status = body.get('status')
-        my_products = Product.objects.filter(user=user, status=status).all()
+        role = body.get('status')
+        my_products = Product.objects.filter(user=user, status=role).all()
         all_products = ApiAllProductSerializer(my_products.order_by('price')[:100], many=True)
         return Response(all_products.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
 
@@ -1886,10 +1886,10 @@ class UserProductsApi(APIView):
     def post(self, request, *args, **kwargs):
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
-        status = body.get('status')
         user_id = body.get('user_id')
         user = get_object_or_404(MyUser, pk=user_id)
-        my_products = Product.objects.filter(user=user, status=status).all()
+        role = body.get('status')
+        my_products = Product.objects.filter(user=user, status=role).all()
         all_products = ApiAllProductSerializer(my_products.order_by('price')[:100], many=True)
         return Response(all_products.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
 
