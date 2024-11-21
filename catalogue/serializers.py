@@ -264,7 +264,7 @@ class ApiAllProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'sell_buy', 'product_type', 'price', 'name_type', 'best_price_bid', 'count_bid', 'weight', 'description', 'warranty', 'is_active',
-                  'expire_time', 'images', 'attrs']
+                  'expire_time', 'images', 'attrs', 'rejection_reason']
 
     def get_images(self, obj):
         # استفاده از سریالایزر برای تصاویر مرتبط

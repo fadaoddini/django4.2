@@ -1757,8 +1757,9 @@ class ApiProductCreateAPIViewV1(APIView):
             weight=weight,
             description=description,
             is_successful=True,
+            status=1,
             warranty=warranty,
-            is_active=True,  # محصول به صورت پیش‌فرض غیرفعال است
+            is_active=False,
             expire_time=expire_time
         )
         product.save()
@@ -1880,7 +1881,7 @@ class MyProductsApi(APIView):
         if role == 1:
             my_products = Product.objects.filter(user=user, is_active=False).all()
         elif role == 2:
-            my_products = Product.objects.filter(user=user, is_active=True).all()
+            my_products = Product.objects.filter(user=user, is_active=True, expire_time__gte=timezone.now()).all()
         elif role == 3:
             my_products = Product.objects.filter(user=user, status=3).all()
         elif role == 4:
