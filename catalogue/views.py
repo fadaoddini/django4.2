@@ -1870,13 +1870,33 @@ class MyProductsApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        # دریافت داده‌ها از body درخواست
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
         user = request.user
         role = body.get('status')
-        my_products = Product.objects.filter(user=user, status=role).all()
+
+        # فیلتر کردن محصولات بر اساس وضعیت
+        if role == 1:
+            my_products = Product.objects.filter(user=user, is_active=False).all()
+        elif role == 2:
+            my_products = Product.objects.filter(user=user, is_active=True).all()
+        elif role == 3:
+            my_products = Product.objects.filter(user=user, status=3).all()
+        elif role == 4:
+            my_products = Product.objects.filter(user=user, expire_time__lte=timezone.now()).all()
+        else:
+            return Response(
+                {"error": "Invalid status provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # سریال کردن نتایج
         all_products = ApiAllProductSerializer(my_products.order_by('price')[:100], many=True)
+
+        # بازگرداندن پاسخ
         return Response(all_products.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
+
 
 
 class UserProductsApi(APIView):
