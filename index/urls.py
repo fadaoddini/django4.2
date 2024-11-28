@@ -27,7 +27,7 @@ urlpatterns = [
     path('update/profile/user/', update_user, name='update-user'),
     path('update/profile/image/', update_info_image, name='update-info-profile-image'),
     path('farmer/add/', add_farmer, name='add-farmer'),
-    path('settings/', SettingsApi.as_view(), name='setting-api'),
+    path('settings', SettingsApi.as_view(), name='setting-api'),
     path('api/v1/AppUpdate', CheckUpdateApi.as_view(), name='check-update-api'),
 
 ]

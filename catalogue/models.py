@@ -207,9 +207,6 @@ class ProductAttr(models.Model):
 
 
 
-
-
-
 class Favorite(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

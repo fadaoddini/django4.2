@@ -18,7 +18,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework.permissions import AllowAny
 
 from bid.models import Bid
-from catalogue.models import Product
+from catalogue.models import Product, Favorite
 from login import helper
 from login.models import MyUser, Follow, Address
 from login.serializers import MyUserSerializer, AddressSerializer, MyProfileSerializer, EditProfileSerializer
@@ -195,6 +195,7 @@ class GetInfo(APIView):
             expired_count = Product.objects.filter(user=user, status=Product.EXPIRED).count()
 
             total_bids = Bid.objects.filter(user=user).count()
+            total_favorites = Favorite.objects.filter(user=user).count()
 
             return JsonResponse({
                 'status': 'ok',
@@ -207,6 +208,9 @@ class GetInfo(APIView):
                 },
                 'bids': {
                     'total': total_bids
+                },
+                'favorites': {
+                    'total': total_favorites
                 }
             })
         except AuthenticationFailed as e:
