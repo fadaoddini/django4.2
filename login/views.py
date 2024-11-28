@@ -17,6 +17,7 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework.permissions import AllowAny
 
+from bid.models import Bid
 from catalogue.models import Product
 from login import helper
 from login.models import MyUser, Follow, Address
@@ -179,6 +180,7 @@ class VerifyNameApi(APIView):
                         content_type='application/json; charset=UTF-8')
 
 
+
 class GetInfo(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -186,17 +188,14 @@ class GetInfo(APIView):
     def get(self, request, *args, **kwargs):
         try:
             user = request.user
-
-            # سریالایز کردن اطلاعات کاربر
             serializer = MyUserSerializer(user)
-
-            # شمارش تعداد محصولات بر اساس وضعیت
             pending_count = Product.objects.filter(user=user, status=Product.PENDING).count()
             approved_count = Product.objects.filter(user=user, status=Product.APPROVED).count()
             rejected_count = Product.objects.filter(user=user, status=Product.REJECTED).count()
             expired_count = Product.objects.filter(user=user, status=Product.EXPIRED).count()
 
-            # بازگشت داده‌ها به همراه تعداد محصولات
+            total_bids = Bid.objects.filter(user=user).count()
+
             return JsonResponse({
                 'status': 'ok',
                 'user': serializer.data,
@@ -205,6 +204,9 @@ class GetInfo(APIView):
                     'approved': approved_count,
                     'rejected': rejected_count,
                     'expired': expired_count,
+                },
+                'bids': {
+                    'total': total_bids
                 }
             })
         except AuthenticationFailed as e:
@@ -213,22 +215,19 @@ class GetInfo(APIView):
             return JsonResponse({'status': 'failed', 'message': 'User not found!'}, status=404)
 
 
+
 class SetImageUser(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)  # اجازه می‌دهد فایل‌های چندقسمتی را دریافت کند
+    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
-        user = request.user  # کاربر احراز هویت‌شده
+        user = request.user
 
         if 'image' not in request.data:
             return Response({"error": "No image provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        image = request.data['image']  # دریافت تصویر
-
-        # در اینجا می‌توانید بررسی‌های اضافی انجام دهید (نوع فایل، اندازه، و غیره)
-
-        # ذخیره تصویر در مدل کاربر
+        image = request.data['image']
         user.image = image
         user.save()
 

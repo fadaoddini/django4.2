@@ -8,10 +8,9 @@ class EditProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
         fields = ['first_name', 'last_name', 'email', 'mobile']
-        read_only_fields = ['mobile']  # موبایل فقط قابل مشاهده باشد
+        read_only_fields = ['mobile']
 
     def validate_email(self, value):
-        """بررسی تکراری نبودن ایمیل."""
         user = self.instance
         if MyUser.objects.filter(email=value).exclude(id=user.id).exists():
             raise serializers.ValidationError("این ایمیل قبلاً استفاده شده است.")
@@ -23,10 +22,11 @@ class MyUserSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     product_count = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
 
     class Meta:
         model = MyUser
-        fields = ('first_name', 'last_name', 'status', 'image', 'mobile', 'id', 'followers_count', 'following_count', 'product_count')
+        fields = ('first_name', 'last_name', 'display_name', 'status', 'image', 'mobile', 'id', 'followers_count', 'following_count', 'product_count')
 
     def get_status(self, obj):
         status = "Nothing"
@@ -45,6 +45,12 @@ class MyUserSerializer(serializers.ModelSerializer):
 
     def get_product_count(self, obj):
         return obj.products.count()
+
+    def get_display_name(self, obj):
+        # بررسی اینکه first_name و last_name خالی هستند یا نه
+        if not obj.first_name and not obj.last_name:
+            return "کاربر محترم"
+        return f"{obj.first_name} {obj.last_name}".strip()
 
 
 
@@ -91,7 +97,6 @@ class MyProfileSerializer(serializers.ModelSerializer):
         )
 
     def get_display_name(self, obj):
-        # بررسی اینکه first_name و last_name خالی هستند یا نه
         if not obj.first_name and not obj.last_name:
             return "کاربر محترم"
         return f"{obj.first_name} {obj.last_name}".strip()
