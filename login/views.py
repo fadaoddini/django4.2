@@ -16,6 +16,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication  # مطم�
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework.permissions import AllowAny
+
+from catalogue.models import Product
 from login import helper
 from login.models import MyUser, Follow, Address
 from login.serializers import MyUserSerializer, AddressSerializer, MyProfileSerializer, EditProfileSerializer
@@ -177,26 +179,38 @@ class VerifyNameApi(APIView):
                         content_type='application/json; charset=UTF-8')
 
 
-
 class GetInfo(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         try:
-            # پس از احراز هویت موفق، کاربر به عنوان request.user در دسترس است
             user = request.user
-            # استفاده از سریالایزر برای فرمت کردن داده‌ها
+
+            # سریالایز کردن اطلاعات کاربر
             serializer = MyUserSerializer(user)
-            # ارسال اطلاعات کاربر
-            return JsonResponse({'status': 'ok', 'user': serializer.data})
 
+            # شمارش تعداد محصولات بر اساس وضعیت
+            pending_count = Product.objects.filter(user=user, status=Product.PENDING).count()
+            approved_count = Product.objects.filter(user=user, status=Product.APPROVED).count()
+            rejected_count = Product.objects.filter(user=user, status=Product.REJECTED).count()
+            expired_count = Product.objects.filter(user=user, status=Product.EXPIRED).count()
+
+            # بازگشت داده‌ها به همراه تعداد محصولات
+            return JsonResponse({
+                'status': 'ok',
+                'user': serializer.data,
+                'products': {
+                    'pending': pending_count,
+                    'approved': approved_count,
+                    'rejected': rejected_count,
+                    'expired': expired_count,
+                }
+            })
         except AuthenticationFailed as e:
-            # در صورت بروز مشکل در احراز هویت
             return JsonResponse({'status': 'failed', 'message': str(e)}, status=401)
-
         except MyUser.DoesNotExist:
             return JsonResponse({'status': 'failed', 'message': 'User not found!'}, status=404)
-
 
 
 class SetImageUser(APIView):
