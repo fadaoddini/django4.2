@@ -3,6 +3,7 @@ import random
 from django.contrib.auth import get_user_model as user_model
 from django.db import models, transaction
 from django.utils import timezone
+from rebo import settings
 
 
 class Category(models.Model):
@@ -204,3 +205,27 @@ class ProductAttr(models.Model):
     def __str__(self):
         return str(self.product)
 
+
+
+
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="favorites",
+        on_delete=models.CASCADE
+    )
+    product = models.ForeignKey(
+        Product,
+        related_name="favorited_by",
+        on_delete=models.CASCADE
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
+        ordering = ['-added_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.product}"

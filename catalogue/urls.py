@@ -13,7 +13,7 @@ from catalogue.views import product_list, ProductDetail, category_products, bran
     TypeByIdApi, ChartByTypeIdApi, BidSellListByTypeApi, BidBuyListByTypeApi, BidSellListChartApi, BidBuyListChartApi, \
     CategoryNameApi, AllTypeApi, BazarWithOptionalSelBuyApi, AllTypeWebApi, BazarWithOptionalSelBuyWebApi, \
     BazarTypeByIdApi, BazarTypeByIdWebApi, SellSingleBazarWebApi, BuySingleBazarWebApi, ProfileProfile, MyBidListApi, \
-    MyProductsApi, UserProductsApi
+    MyProductsApi, UserProductsApi, FavoriteListApi, FavoriteDeleteApi
 
 urlpatterns = [
     path('product/list/', product_list, name='product-list'),
@@ -129,4 +129,8 @@ urlpatterns = [
     path('v1/mybids', MyBidListApi.as_view(), name='my-bids-api'),
     path('v1/myproducts', MyProductsApi.as_view(), name='my-products-api'),
     path('v1/userproducts', UserProductsApi.as_view(), name='user-products-api'),
+
+    path('v1/favorites', FavoriteListApi.as_view(), name='favorite-list-create-api'),
+    path('v1/favorites/<int:pk>', FavoriteDeleteApi.as_view(), name='favorite-delete-api'),
+
 ]

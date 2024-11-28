@@ -26,7 +26,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -35,11 +35,11 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from collections import defaultdict
 from bid.models import Bid
 from catalogue.models import Product, Category, ProductType, Brand, ProductAttribute, ProductAttributeValue, \
-    ProductImage, ProductAttr
+    ProductImage, ProductAttr, Favorite
 from catalogue.serializers import ProductSellSerializer, ProductSingleSerializer, TypesSerializer, \
     ProductTypeSerializer, ProductAttributeSerializer, ProductAttributeValueSerializer, ApiProductSerializer, \
     SingleProductSerializer, SellSingleProductSerializer, BuySingleProductSerializer, CategoryTypeSerializer, \
-    ApiAllProductSerializer, ApiMyBidsSerializer
+    ApiAllProductSerializer, ApiMyBidsSerializer, FavoriteSerializer
 from catalogue.utils import check_user_active
 from company.forms import CompanyForm
 from company.models import Company
@@ -1331,54 +1331,53 @@ class InBazarApi(APIView):
         return Response(context, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
 
 
+
 class SellSingleBazarApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, *args, **kwargs):
-        # دریافت محصول بر اساس pk
         product = Product.objects.filter(pk=pk).first()
         if not product:
             return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # سریالایز کردن اطلاعات محصول
+        is_favorited = False
+        if request.user.is_authenticated:
+            is_favorited = Favorite.objects.filter(user=request.user, product=product).exists()
+
         product_serializer = SellSingleProductSerializer(product)
-
-        # دریافت بیدهای محصول و مرتب‌سازی بر اساس قیمت
         bids = product.bids.all().order_by('-price')[:20]
-
-        # سریالایز کردن اطلاعات بیدها
         bids_serializer = BidSerializer(bids, many=True, context={'request': request})
 
-        # آماده‌سازی داده‌ها برای پاسخ
         data = {
             'product': product_serializer.data,
-            'bids': bids_serializer.data
+            'bids': bids_serializer.data,
+            'is_favorited': is_favorited
         }
 
         return Response(data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
+
 
 class BuySingleBazarApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, *args, **kwargs):
-        # دریافت اطلاعات محصول
         product = Product.objects.filter(pk=pk).first()
         if not product:
             return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # سریالایز کردن اطلاعات محصول
+        is_favorited = False
+        if request.user.is_authenticated:
+            is_favorited = Favorite.objects.filter(user=request.user, product=product).exists()
+
         product_serializer = BuySingleProductSerializer(product)
 
-        # دریافت بیدهای محصول و مرتب‌سازی بر اساس قیمت به صورت صعودی
         bids = product.bids.all().order_by('price')[:20]
-
-        # سریالایز کردن بیدها
         bids_serializer = BidSerializer(bids, many=True, context={'request': request})
 
-        # ترکیب داده‌های محصول و بیدها
         data = {
             'product': product_serializer.data,
-            'bids': bids_serializer.data
+            'bids': bids_serializer.data,
+            'is_favorited': is_favorited
         }
 
         return Response(data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
@@ -1915,3 +1914,42 @@ class UserProductsApi(APIView):
         return Response(all_products.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
 
 
+class FavoriteListApi(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+
+        favorites = Favorite.objects.filter(user=request.user)
+        serializer = FavoriteSerializer(favorites, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+
+        product_id = request.data.get('product')
+        if not product_id:
+            return Response({"error": "شناسه محصول الزامی است."}, status=status.HTTP_400_BAD_REQUEST)
+
+        product = Product.objects.filter(id=product_id).first()
+        if not product:
+            return Response({"error": "محصول یافت نشد."}, status=status.HTTP_404_NOT_FOUND)
+
+        if Favorite.objects.filter(user=request.user, product=product).exists():
+            return Response({"error": "این محصول قبلاً به علاقه‌مندی‌ها اضافه شده است."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        favorite = Favorite.objects.create(user=request.user, product=product)
+        serializer = FavoriteSerializer(favorite)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+class FavoriteDeleteApi(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk):
+        favorite = Favorite.objects.filter(user=request.user, id=pk).first()
+        if not favorite:
+            return Response({"error": "این علاقه‌مندی یافت نشد."}, status=status.HTTP_404_NOT_FOUND)
+
+        favorite.delete()
+        return Response({"message": "محصول از علاقه‌مندی‌ها حذف شد."}, status=status.HTTP_204_NO_CONTENT)

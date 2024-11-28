@@ -3,7 +3,7 @@ from django.urls import path, re_path
 from catalogue.views import product_list, category_products, brand_products
 from index.views import Profile, MainIndex, MainAdmin, MainIndexSearch, update_info, update_info_image, update_user, \
     ProfileWallet, ProfileEtc, ProfileProduct, ProfileLearn, MainProduct, MainRequest, ProfileRequest, \
-    ProfileRequestMain, Api, SettingsApi, BazarApiSearch
+    ProfileRequestMain, Api, SettingsApi, BazarApiSearch, CheckUpdateApi
 from info.views import add_farmer
 
 urlpatterns = [
@@ -28,5 +28,6 @@ urlpatterns = [
     path('update/profile/image/', update_info_image, name='update-info-profile-image'),
     path('farmer/add/', add_farmer, name='add-farmer'),
     path('settings/', SettingsApi.as_view(), name='setting-api'),
+    path('api/v1/AppUpdate', CheckUpdateApi.as_view(), name='check-update-api'),
 
 ]

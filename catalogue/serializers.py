@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from bid.models import Bid
 from catalogue.models import Product, ProductImage, ProductAttribute, ProductAttributeValue, Brand, Category, \
-    ProductType, ProductAttr
+    ProductType, ProductAttr, Favorite
 import datetime
 import json
 from datetime import timedelta
@@ -453,3 +453,21 @@ class ApiMyBidsSerializer(serializers.ModelSerializer):
             rank = None  # مقدار پیش‌فرض اگر sell_buy تعریف نشده باشد یا مقدار غیرمعتبر باشد
 
         return rank
+
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    product_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Favorite
+        fields = ['id', 'user', 'product', 'product_detail', 'added_at']
+        read_only_fields = ['user', 'added_at']
+
+    def get_product_detail(self, obj):
+        return {
+            "id": obj.product.id,
+            "name": str(obj.product),
+            "price": obj.product.price,
+            "description": obj.product.description,
+        }

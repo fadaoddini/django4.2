@@ -1,6 +1,6 @@
 import datetime
 import json
-
+from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth import get_user_model as user_model
 from django.contrib.auth.decorators import login_required
@@ -15,7 +15,6 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from catalogue.models import Product
 from catalogue.serializers import ProductSellSerializer
 from company.forms import CompanyForm
@@ -566,3 +565,23 @@ class SettingsApi(APIView):
         settings = SettingApp.objects.first()
         serializer = SettingsSerializer(settings)
         return Response(serializer.data, content_type='application/json; charset=UTF-8')
+
+
+class CheckUpdateApi(APIView):
+    def post(self, request, *args, **kwargs):
+        context = dict()
+        user_version = request.data.get("version")
+        print(user_version)
+        if not user_version:
+            return JsonResponse({"success": False, "message": "Version not provided"}, status=400)
+        current_version = "2.3.4"
+        if user_version < current_version:
+            context['current_version'] = current_version
+            context['update_required'] = True
+            context['link'] = "https://bazzar.ir/link"
+            return JsonResponse(data = context )
+        else:
+            context['current_version'] = current_version
+            context['update_required'] = False
+            context['link'] = "https://bazzar.ir/link"
+            return JsonResponse(data = context)

@@ -2,7 +2,6 @@ import uuid
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
 from login.myusermanager import MyUserManager
 from rebo import settings
 
@@ -108,4 +107,5 @@ class Address(models.Model):
 
     def __str__(self):
         return f"{self.receiver_name} - {self.city}, {self.sub_city}"
+
 
