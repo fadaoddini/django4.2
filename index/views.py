@@ -575,7 +575,7 @@ class CheckUpdateApi(APIView):
         print(user_version)
         if not user_version:
             return JsonResponse({"success": False, "message": "Version not provided"}, status=400)
-        current_version = "2.3.4"
+        current_version = "1.0.3"
         if user_version < current_version:
             context['current_version'] = current_version
             context['update_required'] = True
