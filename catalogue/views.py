@@ -1237,9 +1237,9 @@ class BazarWithOptionalSelBuyApi(APIView):
     def get(self, request, *args, **kwargs):
         sell_buy = request.GET.get('sell_buy')
         if sell_buy:
-            all_bazar = Product.objects.filter(sell_buy=sell_buy, expire_time__gt=datetime.now())
+            all_bazar = Product.objects.filter(sell_buy=sell_buy, status=2, is_active=True, expire_time__gt=datetime.now())
         else:
-            all_bazar = Product.objects.filter(expire_time__gt=datetime.now())
+            all_bazar = Product.objects.filter(status=2, is_active=True, expire_time__gt=datetime.now())
 
         all_bazar_serializer = ApiAllProductSerializer(all_bazar.order_by('price')[:100], many=True)
         return Response(all_bazar_serializer.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
@@ -1266,19 +1266,12 @@ class BazarTypeByIdApi(APIView):
     def get(self, request, *args, **kwargs):
         sell_buy = request.GET.get('sell_buy')
         pk = request.GET.get('type_id')
-        print("pk")
-        print(pk)
-        print("sell_buy")
-        print(sell_buy)
-
         product_type = ProductType.objects.filter(id=pk).first()
 
-        print("product_type")
-        print(product_type)
         if sell_buy:
-            all_bazar = Product.objects.filter(sell_buy=sell_buy, product_type=product_type, expire_time__gt=datetime.now())
+            all_bazar = Product.objects.filter(status=2, is_active=True, sell_buy=sell_buy, product_type=product_type, expire_time__gt=datetime.now())
         else:
-            all_bazar = Product.objects.filter(product_type=product_type, expire_time__gt=datetime.now())
+            all_bazar = Product.objects.filter(status=2, is_active=True, product_type=product_type, expire_time__gt=datetime.now())
 
         all_bazar_serializer = ApiAllProductSerializer(all_bazar.order_by('price')[:100], many=True)
         return Response(all_bazar_serializer.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')
