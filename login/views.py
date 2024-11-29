@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-
+from django.utils import timezone
 from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -192,7 +192,7 @@ class GetInfo(APIView):
             pending_count = Product.objects.filter(user=user, status=Product.PENDING).count()
             approved_count = Product.objects.filter(user=user, status=Product.APPROVED).count()
             rejected_count = Product.objects.filter(user=user, status=Product.REJECTED).count()
-            expired_count = Product.objects.filter(user=user, status=Product.EXPIRED).count()
+            expired_count = Product.objects.filter(user=user, expire_time__lte=timezone.now()).count()
 
             total_bids = Bid.objects.filter(user=user).count()
             total_favorites = Favorite.objects.filter(user=user).count()
