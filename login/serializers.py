@@ -1,6 +1,5 @@
 from rest_framework import serializers
-
-from bid.models import Bid
+from django.utils import timezone
 from login.models import MyUser, Follow, Address
 
 
@@ -122,7 +121,11 @@ class MyProfileSerializer(serializers.ModelSerializer):
         return obj.bids.count()
 
     def get_products(self, obj):
-        products = obj.products.all()
+        products = obj.products.filter(
+            status=2,
+            is_active=True,
+            expire_time__gte=timezone.now()
+        ).all()
         from catalogue.serializers import ApiAllProductSerializer
         return ApiAllProductSerializer(products, many=True).data
 

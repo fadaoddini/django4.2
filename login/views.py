@@ -312,30 +312,19 @@ class UserDetailsFollowingAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id):
-        # بررسی اینکه کاربر وارد شده است یا خیر
+        user = get_object_or_404(MyUser, pk=user_id)
+
         if request.user.is_anonymous:
             return Response({'error': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # یافتن کاربر بر اساس user_id
-        user = get_object_or_404(MyUser, pk=user_id)
+        from .serializers import MyProfileSerializer
+        serializer = MyProfileSerializer(user, context={'request': request})
+        serialized_data = serializer.data
 
-        # بدست آوردن تعداد فالوورها و دنبال‌شده‌ها
-
-        followers_count = user.followers.count()  # اصلاح
-        following_count = user.following.count()  # اصلاح
-
-        # بررسی اینکه آیا کاربر درخواست‌دهنده (request.user) این کاربر را فالو کرده است یا خیر
         is_following = Follow.objects.filter(follower=request.user, followed=user).exists()
+        serialized_data['isFollowing'] = is_following
 
-        # بازگشت اطلاعات به سمت کلاینت
-        data = {
-            'followers': followers_count,  # تعداد فالوورها
-            'following': following_count,  # تعداد دنبال‌شده‌ها
-            'isFollowing': is_following,   # آیا کاربر درخواست‌دهنده این کاربر را فالو کرده است یا خیر
-        }
-
-        return Response(data, status=status.HTTP_200_OK)
-
+        return Response(serialized_data, status=status.HTTP_200_OK)
 
 
 
