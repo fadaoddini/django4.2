@@ -1869,7 +1869,6 @@ class MyProductsApi(APIView):
         user = request.user
         role = body.get('status')
 
-        # فیلتر کردن محصولات بر اساس وضعیت
         if role == 1:
             my_products = Product.objects.filter(user=user, is_active=False, status=1).all()
         elif role == 2:
@@ -1877,7 +1876,7 @@ class MyProductsApi(APIView):
         elif role == 3:
             my_products = Product.objects.filter(user=user, status=3).all()
         elif role == 4:
-            my_products = Product.objects.filter(user=user, status=4, expire_time__lte=timezone.now()).all()
+            my_products = Product.objects.filter(user=user, expire_time__lte=timezone.now()).all()
         else:
             return Response(
                 {"error": "Invalid status provided."},
