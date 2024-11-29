@@ -324,7 +324,8 @@ class UserDetailsFollowingAPIView(APIView):
         is_following = Follow.objects.filter(follower=request.user, followed=user).exists()
         serialized_data['isFollowing'] = is_following
 
-        return Response(serialized_data, status=status.HTTP_200_OK)
+        return Response(serialized_data, status=status.HTTP_200_OK,
+                        content_type='application/json; charset=UTF-8')
 
 
 

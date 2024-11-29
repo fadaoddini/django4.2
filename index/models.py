@@ -29,3 +29,38 @@ class SettingApp(models.Model):
     def __str__(self):
         return self.title
 
+
+
+class RuleCategory(models.Model):
+    name = models.CharField(max_length=255, unique=True, verbose_name="نام دسته‌بندی")
+    description = models.TextField(null=True, blank=True, verbose_name="توضیحات")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "دسته‌بندی قانون"
+        verbose_name_plural = "دسته‌بندی قوانین"
+
+
+class Rule(models.Model):
+
+    title = models.CharField(max_length=255, verbose_name="عنوان قانون")
+    category = models.ForeignKey(
+        RuleCategory,
+        on_delete=models.CASCADE,
+        related_name="rules",
+        verbose_name="دسته‌بندی",
+    )
+    content = models.TextField(verbose_name="متن قانون")
+    is_active = models.BooleanField(default=True, verbose_name="فعال بودن قانون")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "قانون"
+        verbose_name_plural = "قوانین"
+        ordering = ["-created_at"]

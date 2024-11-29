@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_http_methods
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,8 +22,8 @@ from company.forms import CompanyForm
 from company.models import Company
 from config.lib_custom.get_info_by_user import GetInfoByUser
 from config.lib_custom.utils import CustomPagination
-from index.models import SettingApp
-from index.serializers import SettingsSerializer
+from index.models import SettingApp, Rule, RuleCategory
+from index.serializers import SettingsSerializer, RuleSerializer, RuleCategorySerializer, RuleCreateUpdateSerializer
 from info import forms
 from info.forms import InfoUserForm, FarmerForm, ServiceForm, BrokerForm, StorageForm
 from info.models import Info, Farmer
@@ -585,3 +586,81 @@ class CheckUpdateApi(APIView):
             context['update_required'] = False
             context['link'] = "https://bazzar.ir/link"
             return JsonResponse(data = context)
+
+
+
+
+class RuleCategoryApi(APIView):
+    def get(self, request):
+        categories = RuleCategory.objects.all()
+        serializer = RuleCategorySerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = RuleCategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class RuleApi(APIView):
+    def get(self, request):
+        rules = Rule.objects.filter(is_active=True)
+        serializer = RuleSerializer(rules, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = RuleCreateUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk):
+        try:
+            rule = Rule.objects.get(pk=pk)
+        except Rule.DoesNotExist:
+            return Response({"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = RuleCreateUpdateSerializer(rule, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            rule = Rule.objects.get(pk=pk)
+        except Rule.DoesNotExist:
+            return Response({"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        rule.delete()
+        return Response({"message": "Rule deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class AggregatedRulesApi(APIView):
+    def get(self, request):
+        # استخراج دسته‌بندی‌های دارای قوانین فعال
+        categories = RuleCategory.objects.prefetch_related('rules').all()
+
+        # ساختار تجمیعی قوانین
+        data = []
+        for category in categories:
+            rules = category.rules.filter(is_active=True)  # قوانین فعال
+            if rules.exists():  # اگر قوانین فعال وجود داشته باشند
+                data.append({
+                    "category_name": category.name,
+                    "category_description": category.description,
+                    "rules": [
+                        {
+                            "title": rule.title,
+                            "content": rule.content,
+                            "created_at": rule.created_at,
+                            "updated_at": rule.updated_at,
+                        } for rule in rules
+                    ]
+                })
+
+        return Response(data, status=status.HTTP_200_OK, content_type='application/json; charset=UTF-8')

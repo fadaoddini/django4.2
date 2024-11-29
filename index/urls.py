@@ -3,7 +3,7 @@ from django.urls import path, re_path
 from catalogue.views import product_list, category_products, brand_products
 from index.views import Profile, MainIndex, MainAdmin, MainIndexSearch, update_info, update_info_image, update_user, \
     ProfileWallet, ProfileEtc, ProfileProduct, ProfileLearn, MainProduct, MainRequest, ProfileRequest, \
-    ProfileRequestMain, Api, SettingsApi, BazarApiSearch, CheckUpdateApi
+    ProfileRequestMain, Api, SettingsApi, BazarApiSearch, CheckUpdateApi, RuleCategoryApi, RuleApi, AggregatedRulesApi
 from info.views import add_farmer
 
 urlpatterns = [
@@ -29,5 +29,9 @@ urlpatterns = [
     path('farmer/add/', add_farmer, name='add-farmer'),
     path('settings', SettingsApi.as_view(), name='setting-api'),
     path('api/v1/AppUpdate', CheckUpdateApi.as_view(), name='check-update-api'),
+    path('law/v1/categories', RuleCategoryApi.as_view(), name='rule-category-api'),
+    path('law/v1/rules', RuleApi.as_view(), name='rule-api'),
+    path('law/v1/rules/<int:pk>', RuleApi.as_view(), name='rule-detail-api'),
+    path('law/v1/allActive', AggregatedRulesApi.as_view(), name='aggregated-rules-api'),
 
 ]
