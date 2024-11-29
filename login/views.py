@@ -190,7 +190,7 @@ class GetInfo(APIView):
             user = request.user
             serializer = MyUserSerializer(user)
             pending_count = Product.objects.filter(user=user, status=Product.PENDING).count()
-            approved_count = Product.objects.filter(user=user, status=Product.APPROVED).count()
+            approved_count = Product.objects.filter(user=user, status=Product.APPROVED, expire_time__gte=timezone.now()).count()
             rejected_count = Product.objects.filter(user=user, status=Product.REJECTED).count()
             expired_count = Product.objects.filter(user=user, expire_time__lte=timezone.now()).count()
 
