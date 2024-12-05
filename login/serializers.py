@@ -25,7 +25,7 @@ class MyUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyUser
-        fields = ('first_name', 'last_name', 'display_name', 'status', 'image', 'mobile', 'id', 'followers_count', 'following_count', 'product_count')
+        fields = ('first_name', 'last_name', 'email', 'display_name', 'status', 'image', 'mobile', 'id', 'followers_count', 'following_count', 'product_count')
 
     def get_status(self, obj):
         status = "Nothing"
