@@ -1822,13 +1822,12 @@ class ChartByTypeIdApi(APIView):
             if sell_buy_type == Product.SELL:
                 chart_data[date_str]['maxPriceSell'] = entry['max_price']
                 chart_data[date_str]['minPriceSell'] = entry['min_price']
-                chart_data[date_str]['volume'] += entry['total_weight']  # اضافه‌کردن وزن فروش به حجم کل
+                chart_data[date_str]['volume'] += entry['total_weight']
             elif sell_buy_type == Product.BUY:
                 chart_data[date_str]['maxPriceBuy'] = entry['max_price']
                 chart_data[date_str]['minPriceBuy'] = entry['min_price']
-                chart_data[date_str]['volume'] += entry['total_weight']  # اضافه‌کردن وزن خرید به حجم کل
+                chart_data[date_str]['volume'] += entry['total_weight']
 
-        # آماده‌سازی داده‌های نهایی برای نمودار
         final_data = [
             {
                 'date': date,
@@ -1840,8 +1839,6 @@ class ChartByTypeIdApi(APIView):
             }
             for date, data in chart_data.items()
         ]
-
-        # بازگرداندن داده‌ها به صورت JSON
         return Response(final_data, status=200)
 
 
@@ -1945,3 +1942,14 @@ class FavoriteDeleteApi(APIView):
 
         favorite.delete()
         return Response({"message": "محصول از علاقه‌مندی‌ها حذف شد."}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+class BazarAllApi(APIView):
+
+    def get(self, request, *args, **kwargs):
+        all_bazar = Product.objects.filter(status=2, is_active=True, expire_time__gt=datetime.now())
+        all_bazar_serializer = ApiAllProductSerializer(all_bazar.order_by('price')[:100], many=True)
+        return Response(all_bazar_serializer.data, status=status.HTTP_200_OK, content_type='application/json; charset=utf-8')

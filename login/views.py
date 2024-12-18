@@ -252,6 +252,7 @@ class LogoutV1(APIView):
 
 
 
+
 class FollowAPIView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -260,16 +261,19 @@ class FollowAPIView(APIView):
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
 
-        # اضافه کردن بررسی وجود کلید 'user_id'
         user_id = body.get('user_id')
         if user_id is None:
             return Response({"error": "User ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-
         user_to_follow = get_object_or_404(MyUser, id=user_id)
         request.user.follow(user_to_follow)
-        return Response({"status": "success", "message": f"Following {user_to_follow.username}"}, status=status.HTTP_201_CREATED)
+
+        followers_count = Follow.objects.filter(followed=user_to_follow).count()
+        return Response({
+            "status": "success",
+            "message": f"Following {user_to_follow.username}",
+            "followers": followers_count
+        }, status=status.HTTP_201_CREATED)
 
 
 
@@ -281,15 +285,19 @@ class UnFollowAPIView(APIView):
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
 
-        # اضافه کردن بررسی وجود کلید 'user_id'
         user_id = body.get('user_id')
         if not user_id:
             return Response({"error": "User ID required"}, status=status.HTTP_400_BAD_REQUEST)
 
         user_to_unfollow = get_object_or_404(MyUser, id=user_id)
         request.user.unfollow(user_to_unfollow)
-        return Response({"status": "success", "message": f"Unfollowed {user_to_unfollow.username}"}, status=status.HTTP_204_NO_CONTENT)
 
+        followers_count = Follow.objects.filter(followed=user_to_unfollow).count()
+        return Response({
+            "status": "success",
+            "message": f"Unfollowed {user_to_unfollow.username}",
+            "followers": followers_count
+        }, status=status.HTTP_204_NO_CONTENT)
 
 
 class IsFollowAPIView(APIView):
@@ -300,10 +308,18 @@ class IsFollowAPIView(APIView):
         if request.user.is_anonymous:
             return Response({'error': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        print("Checking if user is following...", user_id)
         user_to_check = get_object_or_404(MyUser, id=user_id)
         is_following = Follow.objects.filter(follower=request.user, followed=user_to_check).exists()
-        return Response({"isFollowing": is_following}, status=status.HTTP_200_OK)
+
+        followers_count = Follow.objects.filter(followed=user_to_check).count()
+        following_count = Follow.objects.filter(follower=user_to_check).count()
+
+        return Response({
+            "isFollowing": is_following,
+            "followers": followers_count,
+            "following": following_count
+        }, status=status.HTTP_200_OK)
+
 
 
 

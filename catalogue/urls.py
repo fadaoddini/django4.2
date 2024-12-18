@@ -13,7 +13,7 @@ from catalogue.views import product_list, ProductDetail, category_products, bran
     TypeByIdApi, ChartByTypeIdApi, BidSellListByTypeApi, BidBuyListByTypeApi, BidSellListChartApi, BidBuyListChartApi, \
     CategoryNameApi, AllTypeApi, BazarWithOptionalSelBuyApi, AllTypeWebApi, BazarWithOptionalSelBuyWebApi, \
     BazarTypeByIdApi, BazarTypeByIdWebApi, SellSingleBazarWebApi, BuySingleBazarWebApi, ProfileProfile, MyBidListApi, \
-    MyProductsApi, UserProductsApi, FavoriteListApi, FavoriteDeleteApi
+    MyProductsApi, UserProductsApi, FavoriteListApi, FavoriteDeleteApi, BazarAllApi
 
 urlpatterns = [
     path('product/list/', product_list, name='product-list'),
@@ -106,6 +106,7 @@ urlpatterns = [
     path('v1/sell/single/mob/<int:pk>', SellSingleBazarApi.as_view(), name='sell-api-single'),
     path('v1/buy/single/mob/<int:pk>', BuySingleBazarApi.as_view(), name='buy-api-single'),
     path('v1/bazar/bazar_with_optional_sel_buy', BazarWithOptionalSelBuyApi.as_view(), name='all-bazar-api'),
+
     path('v1/bazar/sell_buy_bazar', BazarWithOptionalSelBuyApi.as_view(), name='sell-buy-bazar-api'),
     path('v1/bazar/type', BazarTypeByIdApi.as_view(), name='type-id-bazar-api'),
 
@@ -113,7 +114,7 @@ urlpatterns = [
 
     # web
 
-
+    path('v1/bazar/bazar_all', BazarAllApi.as_view(), name='bazar-all-api'),
     path('v1/bazar/sell_buy_bazar_web', BazarWithOptionalSelBuyWebApi.as_view(), name='sell-buy-bazar-web-api'),
 
 
